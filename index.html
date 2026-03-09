@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Srimanth Lashkar // Deep Space Portfolio</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@300;400;500;700&display=swap');
+
+        :root {
+            --matrix-green: #00ff41;
+            --matrix-dark: #003b00;
+            --matrix-glow: rgba(0, 255, 65, 0.8);
+        }
+
+        body {
+            margin: 0;
+            background-color: #000;
+            font-family: 'Fira Code', monospace;
+            color: var(--matrix-green);
+            overflow-x: hidden;
+        }
+
+        /* Fixed Background Elements - Absolute global position outside all containers */
+        #spaceCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: -1;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 2.5s ease-in-out;
+        }
+
+        .crt-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.15) 50%),
+                        linear-gradient(90deg, rgba(255, 0, 0, 0.02), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.02));
+            background-size: 100% 2px, 3px 100%;
+            pointer-events: none;
+            z-index: 300;
+        }
+
+        /* Gatekeeper Terminal */
+        #terminal-gate {
+            position: fixed;
+            inset: 0;
+            background: #000;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            transition: opacity 1.2s ease-in-out, filter 1.2s ease-in-out;
+        }
+
+        .terminal-window {
+            width: 100%;
+            max-width: 750px;
+            background: rgba(0, 5, 0, 0.98);
+            border: 1px solid var(--matrix-green);
+            box-shadow: 0 0 40px rgba(0, 255, 65, 0.15);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .terminal-header {
+            background: rgba(0, 255, 65, 0.05);
+            border-bottom: 1px solid var(--matrix-green);
+            padding: 10px 15px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .terminal-controls { display: flex; gap: 8px; }
+        .control-dot { width: 10px; height: 10px; border-radius: 50%; border: 1px solid var(--matrix-green); }
+
+        .terminal-body { padding: 30px; font-size: 14px; line-height: 1.6; }
+        .terminal-input-container { display: flex; align-items: center; gap: 12px; position: relative; }
+        .terminal-input { background: transparent; border: none; color: var(--matrix-green); outline: none; width: 100%; font-family: inherit; position: relative; z-index: 10; }
+        .terminal-placeholder { position: absolute; left: 0; color: rgba(0, 255, 65, 0.4); pointer-events: none; z-index: 1; white-space: pre; }
+
+        /* Main UI and Transitions */
+        #main-portfolio {
+            display: none;
+            opacity: 0;
+            filter: blur(20px);
+            transition: opacity 2s ease-in-out, filter 2s ease-in-out;
+        }
+
+        #main-portfolio.visible {
+            display: block;
+            opacity: 1;
+            filter: blur(0px);
+        }
+
+        .parallax-section {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 6rem 10%;
+            position: relative;
+        }
+
+        .glass-panel {
+            background: rgba(0, 10, 0, 0.8);
+            border: 1px solid rgba(0, 255, 65, 0.2);
+            backdrop-filter: blur(15px);
+            transition: all 0.3s ease;
+        }
+
+        .glass-panel:hover { border-color: rgba(0, 255, 65, 0.5); background: rgba(0, 15, 0, 0.9); }
+
+        .sticky-nav {
+            position: fixed; top: 50%; right: 2rem; transform: translateY(-50%); z-index: 400; display: flex; flex-direction: column; gap: 1.5rem;
+        }
+
+        .nav-dot { width: 10px; height: 10px; border: 1px solid var(--matrix-green); border-radius: 2px; cursor: pointer; transition: all 0.3s ease; transform: rotate(45deg); }
+        .nav-dot.active { background: var(--matrix-green); box-shadow: 0 0 15px var(--matrix-green); transform: rotate(45deg) scale(1.4); }
+        .nav-label { position: absolute; right: 2rem; opacity: 0; white-space: nowrap; pointer-events: none; transition: all 0.3s ease; font-size: 0.7rem; color: var(--matrix-green); text-transform: uppercase; letter-spacing: 2px; }
+        .nav-container:hover .nav-label { opacity: 1; right: 2.5rem; }
+
+        .section-header { font-size: 0.75rem; letter-spacing: 0.5em; text-transform: uppercase; color: rgba(0, 255, 65, 0.4); margin-bottom: 1rem; display: block; }
+
+        .glitch { text-shadow: 2px 0 #ff00c1, -2px 0 #00fff9; animation: glitch-anim 3s infinite linear alternate-reverse; }
+        @keyframes glitch-anim { 0% { transform: translate(0); } 20% { transform: translate(-2px, 2px); } 40% { transform: translate(-2px, -2px); } 60% { transform: translate(2px, 2px); } 80% { transform: translate(2px, -2px); } 100% { transform: translate(0); } }
+
+        .project-vertical-card { border-left: 2px solid rgba(0, 255, 65, 0.2); padding-left: 2rem; margin-bottom: 5rem; position: relative; transition: all 0.4s ease; }
+        .project-vertical-card::before { content: ''; position: absolute; left: -6px; top: 0; width: 10px; height: 10px; background: var(--matrix-green); box-shadow: 0 0 10px var(--matrix-green); }
+        .project-vertical-card:hover { border-left-color: var(--matrix-green); padding-left: 2.5rem; }
+
+        .tech-tag { font-size: 0.6rem; border: 1px solid var(--matrix-green); padding: 3px 8px; text-transform: uppercase; margin-right: 0.5rem; background: rgba(0, 255, 65, 0.05); }
+
+        .clickable-panel { cursor: pointer; position: relative; overflow: hidden; }
+        .clickable-panel:active { transform: scale(0.98); }
+        .clickable-panel::after { content: 'ACCESS_VAULT'; position: absolute; bottom: 0; left: 0; width: 100%; background: var(--matrix-green); color: #000; font-size: 8px; text-align: center; font-weight: bold; padding: 2px 0; opacity: 0; transition: opacity 0.3s ease; }
+        .clickable-panel:hover::after { opacity: 1; }
+
+        #cert-modal { position: fixed; inset: 0; z-index: 2000; background: rgba(0, 0, 0, 0.95); display: none; align-items: center; justify-content: center; padding: 20px; backdrop-filter: blur(15px); }
+        .modal-content { width: 100%; max-width: 600px; border: 1px solid var(--matrix-green); background: #000; box-shadow: 0 0 50px rgba(0, 255, 65, 0.3); }
+
+        .op-one-liner { border-bottom: 1px solid rgba(0, 255, 65, 0.1); padding: 1.5rem 0; display: flex; justify-content: space-between; align-items: center; transition: all 0.3s ease; }
+        .op-one-liner:hover { padding-left: 1rem; background: rgba(0, 255, 65, 0.05); }
+
+        html { scroll-behavior: smooth; }
+        .hidden { display: none !important; }
+        .social-link-icon:hover { filter: drop-shadow(0 0 10px var(--matrix-green)); transform: translateY(-3px); }
+        
+        .resume-link:hover {
+            filter: drop-shadow(0 0 10px var(--matrix-green));
+            transform: scale(1.15);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="crt-overlay"></div>
+    <canvas id="spaceCanvas"></canvas>
+
+    <!-- Certification Modal -->
+    <div id="cert-modal" onclick="closeModal()">
+        <div class="modal-content p-8 max-h-[80vh] overflow-y-auto" onclick="event.stopPropagation()">
+            <div class="flex justify-between items-center border-b border-[#00ff41] pb-4 mb-6">
+                <h3 class="text-xl font-bold uppercase tracking-widest">Credentials_Validated</h3>
+                <button onclick="closeModal()" class="text-xs hover:text-white">[X]</button>
+            </div>
+            <div class="space-y-6 text-sm">
+                <div><p class="text-[10px] opacity-40 uppercase mb-1">ISC2</p><p class="font-bold text-[#00ff41]">Certified in Cybersecurity (CC)</p><p class="text-[10px] opacity-60">ID: 3448949</p></div>
+                <div><p class="text-[10px] opacity-40 uppercase mb-1">Defense</p><p class="font-bold text-[#00ff41]">SOC Analyst Associate - U.S. Council</p></div>
+                <div><p class="text-[10px] opacity-40 uppercase mb-1">Networking</p><p class="font-bold text-[#00ff41]">Cybersecurity Professional - ZOOM Tech</p></div>
+                <div><p class="text-[10px] opacity-40 uppercase mb-1">Industry Job Simulations</p><ul class="space-y-2"><li>• Deloitte Australia Cyber Simulation</li><li>• Mastercard Cyber Simulation</li></ul></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Terminal Gate -->
+    <div id="terminal-gate">
+        <div class="terminal-window">
+            <div class="terminal-header">
+                <div class="terminal-controls"><div class="control-dot"></div><div class="control-dot"></div><div class="control-dot"></div></div>
+                <div class="text-[10px] uppercase tracking-widest opacity-70">bash — srimanth-os</div>
+                <div class="w-12"></div>
+            </div>
+            <div class="terminal-body">
+                <div id="terminal-log" class="font-mono text-xs">
+                    <p class="text-white/40 mb-1">Srimanth-OS [Production-Stable-v17]</p>
+                    <p class="mb-4">Kernel initialized. Awaiting uplink command...</p>
+                </div>
+                <div id="input-line" class="terminal-input-container">
+                    <span class="text-[#00ff41] font-bold">visitor@srimanth:~$</span>
+                    <div class="relative flex-1">
+                        <span id="placeholder" class="terminal-placeholder">sudo apt install srimanth</span>
+                        <input type="text" id="terminal-input" class="terminal-input" autocomplete="off" autofocus spellcheck="false">
+                    </div>
+                </div>
+                <div id="error-msg" class="text-red-500 text-xs mt-2 hidden">Invalid command. Use: sudo apt install srimanth</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div id="main-portfolio">
+        <div class="sticky-nav">
+            <div class="nav-container relative flex items-center group"><span class="nav-label">Identity</span><div onclick="scrollToSection('hero')" class="nav-dot active" data-target="hero"></div></div>
+            <div class="nav-container relative flex items-center group"><span class="nav-label">Archives</span><div onclick="scrollToSection('projects')" class="nav-dot" data-target="projects"></div></div>
+            <div class="nav-container relative flex items-center group"><span class="nav-label">Manifest</span><div onclick="scrollToSection('skills')" class="nav-dot" data-target="skills"></div></div>
+            <div class="nav-container relative flex items-center group"><span class="nav-label">Operations</span><div onclick="scrollToSection('operations')" class="nav-dot" data-target="operations"></div></div>
+            <div class="nav-container relative flex items-center group"><span class="nav-label">Uplink</span><div onclick="scrollToSection('uplink')" class="nav-dot" data-target="uplink"></div></div>
+        </div>
+
+        <!-- Identity -->
+        <section id="hero" class="parallax-section">
+            <div class="max-w-4xl">
+                <span class="section-header">Location: Hyderabad_Grid</span>
+                <h2 class="text-5xl md:text-9xl font-bold mb-4 glitch uppercase leading-tight">Srimanth<br>Lashkar</h2>
+                <div class="flex items-center gap-6 mt-4">
+                    <p class="text-[7px] md:text-[8px] opacity-70 tracking-[1em] font-bold uppercase text-[#00ff41]">
+                        One Packet At a Time.
+                    </p>
+                    <!-- Points directly to your specific file path in the local downloads folder -->
+                    <a href="/downloads/Srimanth%20Lashkar%20Resume%20Cybersec.pdf" download="Srimanth Lashkar Resume Cybersec.pdf" target="_blank" class="resume-link text-[#00ff41] transition-all" title="Download Full Resume (PDF)">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                    </a>
+                </div>
+            </div>
+        </section>
+
+        <!-- Operational Archive -->
+        <section id="projects" class="parallax-section">
+            <span class="section-header">Sub-System: Archive_Data</span>
+            <h3 class="text-4xl font-bold mb-16 uppercase italic">Operational_Archive</h3>
+            <div class="max-w-4xl">
+                <!-- Project 1 -->
+                <div class="project-vertical-card group">
+                    <span class="text-[10px] opacity-40 mb-2 block tracking-widest">DEPLOYMENT // 2025.10</span>
+                    <h4 class="text-2xl font-bold text-white mb-4">Enigma-Hacktober Challenge Framework</h4>
+                    <p class="text-sm opacity-80 leading-relaxed mb-6">Multi-level cybersecurity challenge infrastructure built for 50+ members. Features real-time Red vs Blue simulations and automated remediation workflows.</p>
+                    <div class="flex flex-wrap gap-2 mb-6"><span class="tech-tag">SIEM</span><span class="tech-tag">Python</span><span class="tech-tag">Open-Source</span></div>
+                    <a href="https://github.com/Srimanthl2k6" target="_blank" class="text-xs font-bold underline hover:text-white transition-colors">ACCESS_SOURCE >></a>
+                </div>
+                <!-- Project 2 -->
+                <div class="project-vertical-card group">
+                    <span class="text-[10px] opacity-40 mb-2 block tracking-widest">ENCRYPTION // 2025.08</span>
+                    <h4 class="text-2xl font-bold text-white mb-4">FileCrypt: AES-256 Utility</h4>
+                    <p class="text-sm opacity-80 leading-relaxed mb-6">Engineered a local-first encryption suite utilizing AES-256 and RSA-2048. Implemented HMAC integrity binding to metadata for secure transmission.</p>
+                    <div class="flex flex-wrap gap-2 mb-6"><span class="tech-tag">Crypto</span><span class="tech-tag">RSA-2048</span><span class="tech-tag">Integrity</span></div>
+                    <a href="https://github.com/Srimanthl2k6" target="_blank" class="text-xs font-bold underline hover:text-white transition-colors">DECRYPT_FILES >></a>
+                </div>
+                <!-- Project 3 -->
+                <div class="project-vertical-card group">
+                    <span class="text-[10px] opacity-40 mb-2 block tracking-widest">SIMULATION // 2025.07</span>
+                    <h4 class="text-2xl font-bold text-white mb-4">Enterprise Network Simulation</h4>
+                    <p class="text-sm opacity-80 leading-relaxed mb-6">Designed a three-floor enterprise network using Cisco Packet Tracer with OSPF routing and HSRP redundancy. Configured Cisco ASA firewall zone policies for layered defense.</p>
+                    <div class="flex flex-wrap gap-2 mb-6"><span class="tech-tag">Cisco ASA</span><span class="tech-tag">OSPF</span><span class="tech-tag">VLAN</span></div>
+                    <a href="https://github.com/Srimanthl2k6" target="_blank" class="text-xs font-bold underline hover:text-white transition-colors">VIEW_SCHEMATIC >></a>
+                </div>
+            </div>
+        </section>
+
+        <!-- Hardware Manifest -->
+        <section id="skills" class="parallax-section">
+            <span class="section-header">Sub-System: System_Specs</span>
+            <h3 class="text-4xl font-bold mb-16 uppercase italic">Hardware_Manifest</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+                <div class="glass-panel p-8 rounded-sm">
+                    <h5 class="text-xs font-bold mb-6 border-b border-[#00ff41] pb-2 uppercase opacity-50">Defensive_Ops</h5>
+                    <ul class="text-xs space-y-4 font-bold"><li>[x] SIEM (WAZUH)</li><li>[x] THREAT DETECTION</li><li>[x] LOG ANALYSIS</li><li>[x] MITRE ATT&CK</li></ul>
+                </div>
+                <div class="glass-panel p-8 rounded-sm">
+                    <h5 class="text-xs font-bold mb-6 border-b border-[#00ff41] pb-2 uppercase opacity-50">Infrastructure</h5>
+                    <ul class="text-xs space-y-4 font-bold"><li>[x] CISCO ASA</li><li>[x] OSPF/HSRP</li><li>[x] VLAN/ACL</li><li>[x] AD CONFIG</li></ul>
+                </div>
+                <div class="glass-panel p-8 rounded-sm">
+                    <h5 class="text-xs font-bold mb-6 border-b border-[#00ff41] pb-2 uppercase opacity-50">Technical_Logic</h5>
+                    <ul class="text-xs space-y-4 font-bold"><li>[x] PYTHON CORE</li><li>[x] C / C++</li><li>[x] LINUX BASH</li><li>[x] KALI SUITE</li></ul>
+                </div>
+                <div class="glass-panel p-8 rounded-sm clickable-panel shadow-[0_0_20px_rgba(0,255,65,0.1)] hover:shadow-[0_0_30px_rgba(0,255,65,0.3)] transition-all" onclick="openModal()">
+                    <h5 class="text-xs font-bold mb-6 border-b border-[#00ff41] pb-2 uppercase opacity-50">Accreditation</h5>
+                    <ul class="text-xs space-y-4 font-bold">
+                        <li class="text-[#00ff41]">[x] ISC2 CERTIFIED (CC)</li>
+                        <li>[x] SOC ANALYST ASSOC.</li>
+                        <li>[x] DELOITTE CYBER SIM</li>
+                        <li class="text-[#00ff41]">[x] TOP 20% GLOBAL CTF</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- Active Operations -->
+        <section id="operations" class="parallax-section">
+            <span class="section-header">Sub-System: Logistics_Data</span>
+            <h3 class="text-4xl font-bold mb-16 uppercase italic">Active_Operations</h3>
+            <div class="max-w-4xl glass-panel p-10 rounded-sm">
+                <div class="op-one-liner"><span class="text-sm font-bold">ISC2 Member</span><span class="text-[10px] opacity-90 uppercase text-white font-bold tracking-widest">Certified in Cybersecurity</span></div>
+                <div class="op-one-liner"><span class="text-sm font-bold">Head of Cybersecurity - Enigma</span><span class="text-[10px] opacity-90 uppercase text-white font-bold tracking-widest">University Tech Club</span></div>
+                <div class="op-one-liner"><span class="text-sm font-bold">Director - Mastertalkies</span><span class="text-[10px] opacity-90 uppercase text-white font-bold tracking-widest">Indie Film Production</span></div>
+                <div class="op-one-liner"><span class="text-sm font-bold">Author & Poet - Writers Pouch</span><span class="text-[10px] opacity-90 uppercase text-white font-bold tracking-widest">Indie Writers Association</span></div>
+            </div>
+        </section>
+
+        <!-- Final Handshake -->
+        <section id="uplink" class="parallax-section">
+            <span class="section-header">Sub-System: Terminal_Output</span>
+            <h3 class="text-4xl font-bold mb-16 uppercase italic">Final_Handshake</h3>
+            <div class="max-w-4xl glass-panel p-10 rounded-sm">
+                <p class="text-lg md:text-xl leading-relaxed mb-10">ISC2 Member & SOC Analyst / CS Undergraduate. Building secure architectures through <span class="text-white">SIEM operations</span>, <span class="text-white">threat detection</span>, and <span class="text-white">incident response</span>.</p>
+                <div class="flex gap-8 items-center">
+                    <a href="https://github.com/Srimanthl2k6" target="_blank" class="social-link-icon p-4 border border-[#00ff41] transition-all"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.403 5.403 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4"></path><path d="M9 18c-4.51 2-5-2-7-2"></path></svg></a>
+                    <a href="https://www.linkedin.com/in/srimanth-lashkar-0794a5264/" target="_blank" class="social-link-icon p-4 border border-[#00ff41] transition-all"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"></path><rect width="4" height="12" x="2" y="9"></rect><circle cx="4" cy="4" r="2"></circle></svg></a>
+                    <a href="https://www.instagram.com/srimanth__l/" target="_blank" class="social-link-icon p-4 border border-[#00ff41] transition-all"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="20" x="2" y="2" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" x2="17.51" y1="6.5" y2="6.5"></line></svg></a>
+                </div>
+            </div>
+        </section>
+
+        <footer class="p-16 border-t border-[#00ff41]/10 bg-black">
+            <div class="max-w-4xl mx-auto flex flex-col md:flex-row justify-between items-center gap-8 opacity-40 text-[10px] tracking-widest">
+                <div class="flex gap-6"><span>IP: <span id="user-ip">...</span></span><span id="clock">TIME: 00:00:00</span></div>
+                <div>© 2026 SRIMANTH LASHKAR // ISC2_MEMBER_3448949</div>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('spaceCanvas'), ctx = canvas.getContext('2d'), mainPortfolio = document.getElementById('main-portfolio');
+        let stars = [], planets = [], rockets = [];
+
+        class Star {
+            constructor() { this.x = Math.random() * canvas.width; this.y = Math.random() * canvas.height; this.size = Math.random() * 2; this.parallax = Math.random() * 0.1; this.opacity = Math.random(); }
+            draw(s) { let y = (this.y - (s * this.parallax)) % canvas.height; if (y < 0) y += canvas.height; ctx.fillStyle = `rgba(0, 255, 65, ${this.opacity})`; ctx.beginPath(); ctx.arc(this.x, y, this.size, 0, Math.PI * 2); ctx.fill(); }
+        }
+
+        class Planet {
+            constructor(x, targetScroll, radius, color, parallax) { 
+                this.x = x; 
+                this.targetScroll = targetScroll;
+                this.radius = radius; 
+                this.color = color; 
+                this.parallax = parallax; 
+            }
+            draw(s) {
+                let y = (window.innerHeight / 2) + (this.targetScroll - s) * (1 - this.parallax);
+                // Wide drawing range to ensure celestial bodies span the entire scroll
+                if (y < -this.radius * 12 || y > window.innerHeight + this.radius * 12) return; 
+
+                let g = ctx.createRadialGradient(this.x, y, this.radius * 0.4, this.x, y, this.radius * 2.5);
+                g.addColorStop(0, this.color); g.addColorStop(1, 'transparent');
+                ctx.fillStyle = g; ctx.beginPath(); ctx.arc(this.x, y, this.radius * 2.5, 0, Math.PI * 2); ctx.fill();
+                ctx.fillStyle = '#010'; ctx.strokeStyle = this.color; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(this.x, y, this.radius, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+            }
+        }
+
+        class Rocket {
+            constructor() { this.reset(); }
+            reset() { 
+                if(!planets.length) return;
+                this.p1 = planets[Math.floor(Math.random() * planets.length)]; 
+                this.p2 = planets[Math.floor(Math.random() * planets.length)]; 
+                if(this.p1 === this.p2) return this.reset(); 
+                this.progress = 0; 
+                this.speed = 0.0015 + Math.random() * 0.002; 
+            }
+            draw(s) {
+                if(!this.p1) return;
+                this.progress += this.speed; if(this.progress >= 1) this.reset();
+                let y1 = (window.innerHeight / 2) + (this.p1.targetScroll - s) * (1 - this.p1.parallax);
+                let y2 = (window.innerHeight / 2) + (this.p2.targetScroll - s) * (1 - this.p2.parallax);
+                let x = this.p1.x + (this.p2.x - this.p1.x) * this.progress, y = y1 + (y2 - y1) * this.progress;
+                ctx.save(); ctx.translate(x, y); ctx.rotate(Math.atan2(y2 - y1, this.p2.x - this.p1.x));
+                ctx.fillStyle = '#fff'; ctx.shadowBlur = 15; ctx.shadowColor = '#00ff41'; ctx.beginPath(); ctx.moveTo(12, 0); ctx.lineTo(-6, -5); ctx.lineTo(-6, 5); ctx.fill();
+                ctx.strokeStyle = 'rgba(0, 255, 65, 1)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(-6, 0); ctx.lineTo(-25, 0); ctx.stroke(); ctx.restore();
+            }
+        }
+
+        function initSpace() {
+            canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+            let totalH = document.documentElement.scrollHeight || 6000;
+            stars = []; for(let i=0; i<300; i++) stars.push(new Star());
+            
+            // Distribute planets mathematically across the whole scroll range
+            planets = [];
+            const planetConfigs = [
+                { x: 0.15, scroll: 0, r: 60, c: 'rgba(0,255,65,0.7)', p: 0.8 },
+                { x: 0.85, scroll: 1500, r: 90, c: 'rgba(0,255,65,0.5)', p: 0.7 },
+                { x: 0.1, scroll: 3000, r: 120, c: 'rgba(0,255,65,0.6)', p: 0.85 },
+                { x: 0.8, scroll: 4500, r: 80, c: 'rgba(0,255,65,0.5)', p: 0.75 },
+                { x: 0.3, scroll: 6000, r: 140, c: 'rgba(0,255,65,0.4)', p: 0.8 },
+                { x: 0.7, scroll: totalH - 1200, r: 100, c: 'rgba(0,255,65,0.5)', p: 0.9 }
+            ];
+            planetConfigs.forEach(conf => planets.push(new Planet(canvas.width * conf.x, conf.scroll, conf.r, conf.c, conf.p)));
+            rockets = []; for(let i=0; i<6; i++) rockets.push(new Rocket());
+        }
+
+        function animate() { ctx.clearRect(0, 0, canvas.width, canvas.height); let s = window.scrollY; stars.forEach(st => st.draw(s)); planets.forEach(p => p.draw(s)); rockets.forEach(r => r.draw(s)); requestAnimationFrame(animate); }
+
+        const terminalGate = document.getElementById('terminal-gate'), terminalInput = document.getElementById('terminal-input'), terminalLog = document.getElementById('terminal-log');
+        const logs = [ { text: "Connecting to deep_space_network...", delay: 400 }, { text: "Optimizing interstellar parallax coordinates...", delay: 500 }, { text: "Finalizing system handshake... [OK]", delay: 600 } ];
+
+        async function startInstallation() {
+            localStorage.setItem('srimanth_os_v17', Date.now()); document.getElementById('input-line').classList.add('hidden');
+            for (const log of logs) {
+                let p = document.createElement('p'); p.innerHTML = `<span class="opacity-30 mr-2">[SYS]</span> ${log.text}`;
+                terminalLog.appendChild(p); await new Promise(r => setTimeout(r, log.delay));
+            }
+            
+            terminalGate.style.filter = 'blur(40px)'; 
+            terminalGate.style.opacity = '0';
+            
+            setTimeout(() => {
+                terminalGate.style.display = 'none'; 
+                mainPortfolio.style.display = 'block';
+                canvas.style.opacity = '1';
+                
+                requestAnimationFrame(() => { 
+                    mainPortfolio.classList.add('visible'); 
+                    initSpace(); 
+                    animate(); 
+                });
+            }, 1200);
+        }
+
+        terminalInput.addEventListener('keydown', (e) => { if(e.key === 'Enter') terminalInput.value.trim().toLowerCase() === "sudo apt install srimanth" ? startInstallation() : (document.getElementById('error-msg').classList.remove('hidden'), terminalInput.value = ""); });
+        
+        window.addEventListener('scroll', () => {
+            let s = window.scrollY;
+            ['hero', 'projects', 'skills', 'operations', 'uplink'].forEach(id => {
+                let el = document.getElementById(id);
+                if (el && s >= el.offsetTop - 400 && s < el.offsetTop + el.offsetHeight - 400) {
+                    document.querySelectorAll('.nav-dot').forEach(d => { d.classList.remove('active'); if(d.dataset.target === id) d.classList.add('active'); });
+                }
+            });
+        });
+
+        window.addEventListener('load', () => { 
+            let saved = localStorage.getItem('srimanth_os_v17');
+            if (saved && Date.now() - parseInt(saved) < 600000) { 
+                terminalGate.style.display = 'none'; mainPortfolio.style.display = 'block'; mainPortfolio.classList.add('visible'); canvas.style.opacity = '1'; initSpace(); animate(); 
+            } else terminalInput.focus();
+        });
+
+        function scrollToSection(id) { document.getElementById(id).scrollIntoView(); }
+        function openModal() { document.getElementById('cert-modal').style.display = 'flex'; document.body.style.overflow = 'hidden'; }
+        function closeModal() { document.getElementById('cert-modal').style.display = 'none'; document.body.style.overflow = 'auto'; }
+        window.addEventListener('resize', initSpace);
+        setInterval(() => { let n = new Date(); document.getElementById('clock').textContent = `TIME: ${n.getHours().toString().padStart(2,'0')}:${n.getMinutes().toString().padStart(2,'0')}:${n.getSeconds().toString().padStart(2,'0')}`; }, 1000);
+        document.getElementById('user-ip').textContent = `172.20.${Math.floor(Math.random()*255)}.${Math.floor(Math.random()*255)}`;
+        document.addEventListener('click', () => { if(terminalGate.style.display !== 'none') terminalInput.focus(); });
+    </script>
+</body>
+</html>
