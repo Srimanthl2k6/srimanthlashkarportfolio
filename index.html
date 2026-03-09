@@ -23,7 +23,7 @@
             width: 100%;
         }
 
-        /* Fixed Background Elements */
+        /* Fixed Background Elements - Absolute global position outside all containers */
         #spaceCanvas {
             position: fixed;
             top: 0;
@@ -87,16 +87,31 @@
         .terminal-body { padding: 30px; font-size: 14px; line-height: 1.6; }
         .terminal-input-container { display: flex; align-items: center; gap: 12px; position: relative; }
         
+        .terminal-input-wrapper {
+            position: relative;
+        }
+
+        .terminal-ghost {
+            position: absolute;
+            left: 0;
+            top: 0;
+            color: rgba(0,255,65,0.35);
+            pointer-events: none;
+            font-family: inherit;
+            font-size: 16px;
+            white-space: nowrap;
+        }
+
         .terminal-input {
+            position: relative;
+            z-index: 2;
+            font-size: 16px;
             background: transparent;
             border: none;
             color: var(--matrix-green);
             outline: none;
             width: 100%;
             font-family: inherit;
-            position: relative;
-            z-index: 10;
-            font-size: 16px;
         }
 
         .terminal-input::placeholder {
@@ -222,12 +237,12 @@
                 </div>
                 <div id="input-line" class="terminal-input-container">
                     <span class="text-[#00ff41] font-bold">visitor@srimanth:~$</span>
-                    <div class="relative flex-1">
-                        <input 
+                    <div class="relative flex-1 terminal-input-wrapper">
+                        <span id="ghost-command" class="terminal-ghost">sudo apt install srimanth</span>
+                        <input
                             type="text"
                             id="terminal-input"
                             class="terminal-input"
-                            placeholder="sudo apt install srimanth"
                             autocomplete="off"
                             autofocus
                             spellcheck="false">
@@ -444,6 +459,20 @@
 
         const terminalGate = document.getElementById('terminal-gate'), terminalInput = document.getElementById('terminal-input'), terminalLog = document.getElementById('terminal-log');
         const logs = [ { text: "Uplinking to responsive_grid...", delay: 400 }, { text: "Optimizing interstellar coordinates...", delay: 500 }, { text: "Finalizing system handshake... [OK]", delay: 600 } ];
+
+        const ghostCommand = document.getElementById("ghost-command");
+        const commandTemplate = "sudo apt install srimanth";
+
+        terminalInput.addEventListener("input", () => {
+            const typed = terminalInput.value;
+
+            if (commandTemplate.startsWith(typed)) {
+                ghostCommand.textContent =
+                    typed + commandTemplate.slice(typed.length);
+            } else {
+                ghostCommand.textContent = commandTemplate;
+            }
+        });
 
         async function startInstallation() {
             localStorage.setItem('srimanth_os_v18', Date.now()); document.getElementById('input-line').classList.add('hidden');
