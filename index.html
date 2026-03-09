@@ -23,7 +23,7 @@
             width: 100%;
         }
 
-        /* Fixed Background Elements - Absolute global position outside all containers */
+        /* Fixed Background Elements */
         #spaceCanvas {
             position: fixed;
             top: 0;
@@ -89,17 +89,24 @@
         
         .terminal-input-wrapper {
             position: relative;
+            display: flex;
+            align-items: center;
+            height: 1.5rem;
         }
 
         .terminal-ghost {
             position: absolute;
             left: 0;
-            top: 0;
+            top: 50%;
+            transform: translateY(-50%);
             color: rgba(0,255,65,0.35);
             pointer-events: none;
             font-family: inherit;
             font-size: 16px;
-            white-space: nowrap;
+            white-space: pre;
+            margin: 0;
+            padding: 0;
+            line-height: 1;
         }
 
         .terminal-input {
@@ -112,10 +119,13 @@
             outline: none;
             width: 100%;
             font-family: inherit;
+            margin: 0;
+            padding: 0;
+            line-height: 1;
         }
 
         .terminal-input::placeholder {
-            color: rgba(0, 255, 65, 0.4);
+            color: transparent; /* Handled by ghost text */
         }
 
         /* Main UI and Transitions */
@@ -232,7 +242,7 @@
             </div>
             <div class="terminal-body">
                 <div id="terminal-log" class="font-mono text-xs">
-                    <p class="text-white/40 mb-1">Srimanth-OS [Responsive-Kernel-v18]</p>
+                    <p class="text-white/40 mb-1">Srimanth-OS [Responsive-Kernel-v19]</p>
                     <p class="mb-4">Kernel initialized. Awaiting uplink command...</p>
                 </div>
                 <div id="input-line" class="terminal-input-container">
@@ -467,15 +477,18 @@
             const typed = terminalInput.value;
 
             if (commandTemplate.startsWith(typed)) {
-                ghostCommand.textContent =
-                    typed + commandTemplate.slice(typed.length);
+                // Hides the part already typed so it perfectly overlaps the input text without getting bold
+                ghostCommand.innerHTML = `<span style="color: transparent;">${typed}</span>${commandTemplate.slice(typed.length)}`;
             } else {
-                ghostCommand.textContent = commandTemplate;
+                ghostCommand.innerHTML = ""; // If they type a wrong character, hide the ghost text
             }
         });
+        
+        // Initial setup for ghost text
+        ghostCommand.innerHTML = commandTemplate;
 
         async function startInstallation() {
-            localStorage.setItem('srimanth_os_v18', Date.now()); document.getElementById('input-line').classList.add('hidden');
+            localStorage.setItem('srimanth_os_v19', Date.now()); document.getElementById('input-line').classList.add('hidden');
             for (const log of logs) {
                 let p = document.createElement('p'); p.innerHTML = `<span class="opacity-30 mr-2">[SYS]</span> ${log.text}`;
                 terminalLog.appendChild(p); await new Promise(r => setTimeout(r, log.delay));
@@ -500,7 +513,7 @@
         });
 
         window.addEventListener('load', () => { 
-            let saved = localStorage.getItem('srimanth_os_v18');
+            let saved = localStorage.getItem('srimanth_os_v19');
             if (saved && Date.now() - parseInt(saved) < 600000) { 
                 terminalGate.style.display = 'none'; mainPortfolio.style.display = 'block'; mainPortfolio.classList.add('visible'); canvas.style.opacity = '1'; initSpace(); animate(); 
             } else terminalInput.focus();
