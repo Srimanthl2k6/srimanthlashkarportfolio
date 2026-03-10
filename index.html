@@ -92,13 +92,14 @@
             display: flex;
             align-items: center;
             height: 1.5rem;
+            overflow: hidden; /* Vital for horizontal scrolling sync */
         }
 
         .terminal-ghost {
             position: absolute;
             left: 0;
             top: 50%;
-            transform: translateY(-50%);
+            transform: translate(0, -50%);
             color: rgba(0,255,65,0.35);
             pointer-events: none;
             font-family: inherit;
@@ -125,7 +126,7 @@
         }
 
         .terminal-input::placeholder {
-            color: transparent; /* Handled by ghost text */
+            color: transparent;
         }
 
         /* Main UI and Transitions */
@@ -242,11 +243,14 @@
             </div>
             <div class="terminal-body">
                 <div id="terminal-log" class="font-mono text-xs">
-                    <p class="text-white/40 mb-1">Srimanth-OS [Responsive-Kernel-v19]</p>
+                    <p class="text-white/40 mb-1">Srimanth-OS [Responsive-Kernel-v20]</p>
                     <p class="mb-4">Kernel initialized. Awaiting uplink command...</p>
                 </div>
                 <div id="input-line" class="terminal-input-container">
-                    <span class="text-[#00ff41] font-bold">visitor@srimanth:~$</span>
+                    <!-- Responsive prompt string -->
+                    <span class="text-[#00ff41] font-bold hidden sm:inline">visitor@srimanth:~$</span>
+                    <span class="text-[#00ff41] font-bold sm:hidden">visitor:~$</span>
+                    
                     <div class="relative flex-1 terminal-input-wrapper">
                         <span id="ghost-command" class="terminal-ghost">sudo apt install srimanth</span>
                         <input
@@ -395,7 +399,7 @@
         class Planet {
             constructor(x, targetScrollPercent, radius, color, parallax) { 
                 this.x = x; 
-                this.targetScrollPercent = targetScrollPercent; // Use percentage for better resizing
+                this.targetScrollPercent = targetScrollPercent;
                 this.radius = radius; 
                 this.color = color; 
                 this.parallax = parallax; 
@@ -442,20 +446,25 @@
         function initSpace() {
             canvas.width = window.innerWidth; canvas.height = window.innerHeight;
             let totalH = document.documentElement.scrollHeight || 6000;
-            stars = []; for(let i=0; i<300; i++) stars.push(new Star());
             
-            // Percentage-based distribution ensures background spans entire site regardless of device/browser resize
+            // Adjust densities for mobile to maintain performance and clear view
+            const isMobile = window.innerWidth < 768;
+            const starCount = isMobile ? 150 : 300;
+            const pScale = isMobile ? 0.5 : 1; 
+            
+            stars = []; for(let i=0; i<starCount; i++) stars.push(new Star());
+            
             planets = [];
             const planetConfigs = [
-                { x: 0.15, scrollP: 5, r: 60, c: 'rgba(0,255,65,0.7)', p: 0.8 },
-                { x: 0.85, scrollP: 20, r: 90, c: 'rgba(0,255,65,0.5)', p: 0.7 },
-                { x: 0.1, scrollP: 40, r: 120, c: 'rgba(0,255,65,0.6)', p: 0.85 },
-                { x: 0.8, scrollP: 60, r: 80, c: 'rgba(0,255,65,0.5)', p: 0.75 },
-                { x: 0.3, scrollP: 80, r: 140, c: 'rgba(0,255,65,0.4)', p: 0.8 },
-                { x: 0.7, scrollP: 95, r: 100, c: 'rgba(0,255,65,0.5)', p: 0.9 }
+                { x: isMobile ? 0.1 : 0.15, scrollP: 5, r: 60 * pScale, c: 'rgba(0,255,65,0.7)', p: 0.8 },
+                { x: isMobile ? 0.9 : 0.85, scrollP: 20, r: 90 * pScale, c: 'rgba(0,255,65,0.5)', p: 0.7 },
+                { x: isMobile ? 0.15 : 0.1, scrollP: 40, r: 120 * pScale, c: 'rgba(0,255,65,0.6)', p: 0.85 },
+                { x: isMobile ? 0.85 : 0.8, scrollP: 60, r: 80 * pScale, c: 'rgba(0,255,65,0.5)', p: 0.75 },
+                { x: isMobile ? 0.1 : 0.3, scrollP: 80, r: 140 * pScale, c: 'rgba(0,255,65,0.4)', p: 0.8 },
+                { x: isMobile ? 0.9 : 0.7, scrollP: 95, r: 100 * pScale, c: 'rgba(0,255,65,0.5)', p: 0.9 }
             ];
             planetConfigs.forEach(conf => planets.push(new Planet(canvas.width * conf.x, conf.scrollP, conf.r, conf.c, conf.p)));
-            rockets = []; for(let i=0; i<6; i++) rockets.push(new Rocket());
+            rockets = []; for(let i=0; i<(isMobile?3:6); i++) rockets.push(new Rocket());
         }
 
         function animate() { 
@@ -470,25 +479,28 @@
         const terminalGate = document.getElementById('terminal-gate'), terminalInput = document.getElementById('terminal-input'), terminalLog = document.getElementById('terminal-log');
         const logs = [ { text: "Uplinking to responsive_grid...", delay: 400 }, { text: "Optimizing interstellar coordinates...", delay: 500 }, { text: "Finalizing system handshake... [OK]", delay: 600 } ];
 
+        // Terminal ghost auto-complete syncing
         const ghostCommand = document.getElementById("ghost-command");
         const commandTemplate = "sudo apt install srimanth";
 
         terminalInput.addEventListener("input", () => {
             const typed = terminalInput.value;
-
             if (commandTemplate.startsWith(typed)) {
-                // Hides the part already typed so it perfectly overlaps the input text without getting bold
                 ghostCommand.innerHTML = `<span style="color: transparent;">${typed}</span>${commandTemplate.slice(typed.length)}`;
             } else {
-                ghostCommand.innerHTML = ""; // If they type a wrong character, hide the ghost text
+                ghostCommand.innerHTML = ""; 
             }
         });
         
-        // Initial setup for ghost text
+        // Sync horizontal scrolling on mobile
+        terminalInput.addEventListener("scroll", () => {
+            ghostCommand.style.transform = `translate(${-terminalInput.scrollLeft}px, -50%)`;
+        });
+        
         ghostCommand.innerHTML = commandTemplate;
 
         async function startInstallation() {
-            localStorage.setItem('srimanth_os_v19', Date.now()); document.getElementById('input-line').classList.add('hidden');
+            localStorage.setItem('srimanth_os_v20', Date.now()); document.getElementById('input-line').classList.add('hidden');
             for (const log of logs) {
                 let p = document.createElement('p'); p.innerHTML = `<span class="opacity-30 mr-2">[SYS]</span> ${log.text}`;
                 terminalLog.appendChild(p); await new Promise(r => setTimeout(r, log.delay));
@@ -513,7 +525,8 @@
         });
 
         window.addEventListener('load', () => { 
-            let saved = localStorage.getItem('srimanth_os_v19');
+            // Changed cache key to v20 to force reset for this test
+            let saved = localStorage.getItem('srimanth_os_v20');
             if (saved && Date.now() - parseInt(saved) < 600000) { 
                 terminalGate.style.display = 'none'; mainPortfolio.style.display = 'block'; mainPortfolio.classList.add('visible'); canvas.style.opacity = '1'; initSpace(); animate(); 
             } else terminalInput.focus();
@@ -523,9 +536,13 @@
         function openModal() { document.getElementById('cert-modal').style.display = 'flex'; document.body.style.overflow = 'hidden'; }
         function closeModal() { document.getElementById('cert-modal').style.display = 'none'; document.body.style.overflow = 'auto'; }
         
-        // Comprehensive Resizing Handler
+        // Prevent glitchy resizes on mobile scroll (URL bar hiding)
+        let lastWidth = window.innerWidth;
         window.addEventListener('resize', () => {
-            initSpace();
+            if (window.innerWidth !== lastWidth) {
+                lastWidth = window.innerWidth;
+                initSpace();
+            }
         });
 
         setInterval(() => { let n = new Date(); document.getElementById('clock').textContent = `TIME: ${n.getHours().toString().padStart(2,'0')}:${n.getMinutes().toString().padStart(2,'0')}:${n.getSeconds().toString().padStart(2,'0')}`; }, 1000);
