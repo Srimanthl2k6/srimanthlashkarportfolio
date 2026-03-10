@@ -30,17 +30,15 @@
             overscroll-behavior-x: none;
         }
 
-        /* Fixed Background Elements */
+        /* Fixed Background Elements - Guaranteed visibility and layer ordering */
         #spaceCanvas {
             position: fixed;
             top: 0;
             left: 0;
             width: 100vw;
             height: 100vh;
-            z-index: -1;
+            z-index: 0; /* Base layer, above body background */
             pointer-events: none;
-            opacity: 0;
-            transition: opacity 2.5s ease-in-out;
         }
 
         .crt-overlay {
@@ -56,7 +54,7 @@
             z-index: 300;
         }
 
-        /* Gatekeeper Terminal */
+        /* Gatekeeper Terminal - Covers canvas initially */
         #terminal-gate {
             position: fixed;
             inset: 0;
@@ -144,6 +142,8 @@
             filter: blur(20px);
             transition: opacity 2s ease-in-out, filter 2s ease-in-out;
             width: 100%;
+            position: relative;
+            z-index: 10; /* Ensures content stays above canvas */
         }
 
         #main-portfolio.visible {
@@ -262,11 +262,10 @@
             </div>
             <div class="terminal-body">
                 <div id="terminal-log" class="font-mono text-xs">
-                    <p class="text-white/40 mb-1">Srimanth-OS [Responsive-Kernel-v21]</p>
+                    <p class="text-white/40 mb-1">Srimanth-OS [Responsive-Kernel-v22]</p>
                     <p class="mb-4">Kernel initialized. Awaiting uplink command...</p>
                 </div>
                 <div id="input-line" class="terminal-input-container">
-                    <!-- Responsive prompt string -->
                     <span class="text-[#00ff41] font-bold hidden sm:inline">visitor@srimanth:~$</span>
                     <span class="text-[#00ff41] font-bold sm:hidden">visitor:~$</span>
                     
@@ -300,7 +299,6 @@
         <section id="hero" class="parallax-section">
             <div class="max-w-4xl">
                 <span class="section-header">Location: Hyderabad_Grid</span>
-                <!-- Scaling adjusted to absolutely guarantee fitting on small mobile -->
                 <h2 class="text-4xl sm:text-5xl md:text-9xl font-bold mb-4 glitch uppercase leading-tight">Srimanth<br>Lashkar</h2>
                 <div class="mt-4">
                     <p class="text-[7px] md:text-[8px] opacity-70 tracking-[0.6em] sm:tracking-[0.8em] md:tracking-[1em] font-bold uppercase text-[#00ff41] break-words">
@@ -426,7 +424,7 @@
                 this.parallax = parallax; 
             }
             draw(s) {
-                const totalH = document.documentElement.scrollHeight || 5000;
+                const totalH = Math.max(document.documentElement.scrollHeight, 5000);
                 const targetPixel = (this.targetScrollPercent / 100) * totalH;
                 let y = (window.innerHeight / 2) + (targetPixel - s) * (1 - this.parallax);
                 
@@ -452,7 +450,7 @@
             draw(s) {
                 if(!this.p1) return;
                 this.progress += this.speed; if(this.progress >= 1) this.reset();
-                const totalH = document.documentElement.scrollHeight || 5000;
+                const totalH = Math.max(document.documentElement.scrollHeight, 5000);
                 const y1World = (this.p1.targetScrollPercent / 100) * totalH;
                 const y2World = (this.p2.targetScrollPercent / 100) * totalH;
                 let y1 = (window.innerHeight / 2) + (y1World - s) * (1 - this.p1.parallax);
@@ -466,7 +464,6 @@
 
         function initSpace() {
             canvas.width = window.innerWidth; canvas.height = window.innerHeight;
-            let totalH = document.documentElement.scrollHeight || 6000;
             
             // Adjust densities for mobile to maintain performance and clear view
             const isMobile = window.innerWidth < 768;
@@ -522,14 +519,14 @@
 
         async function startInstallation() {
             // New cache key effectively tests it fresh
-            localStorage.setItem('srimanth_os_v21', Date.now()); document.getElementById('input-line').classList.add('hidden');
+            localStorage.setItem('srimanth_os_v22', Date.now()); document.getElementById('input-line').classList.add('hidden');
             for (const log of logs) {
                 let p = document.createElement('p'); p.innerHTML = `<span class="opacity-30 mr-2">[SYS]</span> ${log.text}`;
                 terminalLog.appendChild(p); await new Promise(r => setTimeout(r, log.delay));
             }
             terminalGate.style.filter = 'blur(40px)'; terminalGate.style.opacity = '0';
             setTimeout(() => {
-                terminalGate.style.display = 'none'; mainPortfolio.style.display = 'block'; canvas.style.opacity = '1';
+                terminalGate.style.display = 'none'; mainPortfolio.style.display = 'block';
                 requestAnimationFrame(() => { mainPortfolio.classList.add('visible'); initSpace(); animate(); });
             }, 1200);
         }
@@ -547,9 +544,9 @@
         });
 
         window.addEventListener('load', () => { 
-            let saved = localStorage.getItem('srimanth_os_v21');
+            let saved = localStorage.getItem('srimanth_os_v22');
             if (saved && Date.now() - parseInt(saved) < 600000) { 
-                terminalGate.style.display = 'none'; mainPortfolio.style.display = 'block'; mainPortfolio.classList.add('visible'); canvas.style.opacity = '1'; initSpace(); animate(); 
+                terminalGate.style.display = 'none'; mainPortfolio.style.display = 'block'; mainPortfolio.classList.add('visible'); initSpace(); animate(); 
             } else terminalInput.focus();
         });
 
