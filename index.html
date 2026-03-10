@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Srimanth Lashkar // Deep Space Portfolio</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
@@ -14,13 +14,20 @@
             --matrix-glow: rgba(0, 255, 65, 0.8);
         }
 
-        body {
+        *, *::before, *::after {
+            box-sizing: border-box;
+        }
+
+        html, body {
             margin: 0;
+            padding: 0;
             background-color: #000;
             font-family: 'Fira Code', monospace;
             color: var(--matrix-green);
-            overflow-x: hidden;
             width: 100%;
+            max-width: 100vw;
+            overflow-x: hidden;
+            overscroll-behavior-x: none;
         }
 
         /* Fixed Background Elements */
@@ -92,7 +99,7 @@
             display: flex;
             align-items: center;
             height: 1.5rem;
-            overflow: hidden; /* Vital for horizontal scrolling sync */
+            overflow: hidden; /* Clips horizontal scrolling securely */
         }
 
         .terminal-ghost {
@@ -121,7 +128,8 @@
             width: 100%;
             font-family: inherit;
             margin: 0;
-            padding: 0;
+            /* Right padding forces input to scroll early, keeping ghost text visible */
+            padding: 0 50px 0 0; 
             line-height: 1;
         }
 
@@ -171,7 +179,14 @@
         .nav-label { position: absolute; right: 2rem; opacity: 0; white-space: nowrap; pointer-events: none; transition: all 0.3s ease; font-size: 0.7rem; color: var(--matrix-green); text-transform: uppercase; letter-spacing: 2px; }
         .nav-container:hover .nav-label { opacity: 1; right: 2.5rem; }
 
-        .section-header { font-size: 0.75rem; letter-spacing: 0.5em; text-transform: uppercase; color: rgba(0, 255, 65, 0.4); margin-bottom: 1rem; display: block; }
+        .section-header { 
+            font-size: 0.75rem; 
+            letter-spacing: 0.2em; /* Mobile-safe tracking */
+            text-transform: uppercase; 
+            color: rgba(0, 255, 65, 0.4); 
+            margin-bottom: 1rem; 
+            display: block; 
+        }
 
         .glitch { text-shadow: 2px 0 #ff00c1, -2px 0 #00fff9; animation: glitch-anim 3s infinite linear alternate-reverse; }
         @keyframes glitch-anim { 0% { transform: translate(0); } 20% { transform: translate(-2px, 2px); } 40% { transform: translate(-2px, -2px); } 60% { transform: translate(2px, 2px); } 80% { transform: translate(2px, -2px); } 100% { transform: translate(0); } }
@@ -180,7 +195,7 @@
         .project-vertical-card::before { content: ''; position: absolute; left: -6px; top: 0; width: 10px; height: 10px; background: var(--matrix-green); box-shadow: 0 0 10px var(--matrix-green); }
         .project-vertical-card:hover { border-left-color: var(--matrix-green); padding-left: 2rem; }
 
-        .tech-tag { font-size: 0.6rem; border: 1px solid var(--matrix-green); padding: 3px 8px; text-transform: uppercase; margin-right: 0.5rem; background: rgba(0, 255, 65, 0.05); }
+        .tech-tag { font-size: 0.6rem; border: 1px solid var(--matrix-green); padding: 3px 8px; text-transform: uppercase; margin-right: 0.5rem; background: rgba(0, 255, 65, 0.05); display: inline-block; margin-bottom: 0.5rem; }
 
         .clickable-panel { cursor: pointer; position: relative; overflow: hidden; }
         .clickable-panel:active { transform: scale(0.98); }
@@ -193,22 +208,26 @@
         .op-one-liner { border-bottom: 1px solid rgba(0, 255, 65, 0.1); padding: 1.25rem 0; display: flex; justify-content: space-between; align-items: center; transition: all 0.3s ease; }
         .op-one-liner:hover { padding-left: 0.5rem; background: rgba(0, 255, 65, 0.05); }
 
-        html { scroll-behavior: smooth; }
-        .hidden { display: none !important; }
         .social-link-icon:hover { filter: drop-shadow(0 0 10px var(--matrix-green)); transform: translateY(-3px); }
+        
+        /* Layout overrides for larger screens to enforce exact grids */
+        @media (min-width: 768px) {
+            .section-header { letter-spacing: 0.5em; }
+        }
 
-        /* Mobile specific adjustments */
+        /* Mobile specific adjustments to absolutely prevent overflow */
         @media (max-width: 640px) {
-            .parallax-section { padding: 4rem 5%; }
-            .sticky-nav { right: 0.75rem; }
+            .parallax-section { padding: 4rem 1.5rem; }
+            .sticky-nav { right: 0.5rem; transform: translateY(-50%) scale(0.85); }
             .op-one-liner { flex-direction: column; align-items: flex-start; gap: 0.25rem; }
             .terminal-body {
-                padding: 20px;
+                padding: 1.25rem;
                 font-size: 13px;
             }
             .terminal-window {
                 max-width: 95vw;
             }
+            .terminal-input { padding: 0 40px 0 0; }
         }
     </style>
 </head>
@@ -219,10 +238,10 @@
 
     <!-- Certification Modal -->
     <div id="cert-modal" onclick="closeModal()">
-        <div class="modal-content p-8 max-h-[80vh] overflow-y-auto" onclick="event.stopPropagation()">
+        <div class="modal-content p-6 md:p-8 max-h-[80vh] overflow-y-auto" onclick="event.stopPropagation()">
             <div class="flex justify-between items-center border-b border-[#00ff41] pb-4 mb-6">
-                <h3 class="text-xl font-bold uppercase tracking-widest">Credentials_Validated</h3>
-                <button onclick="closeModal()" class="text-xs hover:text-white">[X]</button>
+                <h3 class="text-lg md:text-xl font-bold uppercase tracking-widest">Credentials_Validated</h3>
+                <button onclick="closeModal()" class="text-xs hover:text-white p-2">[X]</button>
             </div>
             <div class="space-y-6 text-sm">
                 <div><p class="text-[10px] opacity-40 uppercase mb-1">ISC2</p><p class="font-bold text-[#00ff41]">Certified in Cybersecurity (CC)</p><p class="text-[10px] opacity-60">ID: 3448949</p></div>
@@ -243,7 +262,7 @@
             </div>
             <div class="terminal-body">
                 <div id="terminal-log" class="font-mono text-xs">
-                    <p class="text-white/40 mb-1">Srimanth-OS [Responsive-Kernel-v20]</p>
+                    <p class="text-white/40 mb-1">Srimanth-OS [Responsive-Kernel-v21]</p>
                     <p class="mb-4">Kernel initialized. Awaiting uplink command...</p>
                 </div>
                 <div id="input-line" class="terminal-input-container">
@@ -281,9 +300,10 @@
         <section id="hero" class="parallax-section">
             <div class="max-w-4xl">
                 <span class="section-header">Location: Hyderabad_Grid</span>
-                <h2 class="text-4xl md:text-9xl font-bold mb-4 glitch uppercase leading-tight">Srimanth<br>Lashkar</h2>
+                <!-- Scaling adjusted to absolutely guarantee fitting on small mobile -->
+                <h2 class="text-4xl sm:text-5xl md:text-9xl font-bold mb-4 glitch uppercase leading-tight">Srimanth<br>Lashkar</h2>
                 <div class="mt-4">
-                    <p class="text-[7px] md:text-[8px] opacity-70 tracking-[0.8em] md:tracking-[1em] font-bold uppercase text-[#00ff41]">
+                    <p class="text-[7px] md:text-[8px] opacity-70 tracking-[0.6em] sm:tracking-[0.8em] md:tracking-[1em] font-bold uppercase text-[#00ff41] break-words">
                         One Packet At a Time.
                     </p>
                 </div>
@@ -293,25 +313,25 @@
         <!-- Operational Archive -->
         <section id="projects" class="parallax-section">
             <span class="section-header">Sub-System: Archive_Data</span>
-            <h3 class="text-4xl font-bold mb-16 uppercase italic">Operational_Archive</h3>
+            <h3 class="text-3xl md:text-4xl font-bold mb-12 md:mb-16 uppercase italic">Operational_Archive</h3>
             <div class="max-w-4xl">
                 <div class="project-vertical-card group">
                     <span class="text-[10px] opacity-40 mb-2 block tracking-widest">DEPLOYMENT // 2025.10</span>
-                    <h4 class="text-2xl font-bold text-white mb-4">Enigma-Hacktober Challenge Framework</h4>
+                    <h4 class="text-xl md:text-2xl font-bold text-white mb-4">Enigma-Hacktober Challenge Framework</h4>
                     <p class="text-sm opacity-80 leading-relaxed mb-6">Multi-level cybersecurity challenge infrastructure built for 50+ members. Features real-time Red vs Blue simulations and automated remediation workflows.</p>
                     <div class="flex flex-wrap gap-2 mb-6"><span class="tech-tag">SIEM</span><span class="tech-tag">Python</span><span class="tech-tag">Open-Source</span></div>
                     <a href="https://github.com/Srimanthl2k6" target="_blank" class="text-xs font-bold underline hover:text-white transition-colors">ACCESS_SOURCE >></a>
                 </div>
                 <div class="project-vertical-card group">
                     <span class="text-[10px] opacity-40 mb-2 block tracking-widest">ENCRYPTION // 2025.08</span>
-                    <h4 class="text-2xl font-bold text-white mb-4">FileCrypt: AES-256 Utility</h4>
+                    <h4 class="text-xl md:text-2xl font-bold text-white mb-4">FileCrypt: AES-256 Utility</h4>
                     <p class="text-sm opacity-80 leading-relaxed mb-6">Engineered a local-first encryption suite utilizing AES-256 and RSA-2048. Implemented HMAC integrity binding to metadata for secure transmission.</p>
                     <div class="flex flex-wrap gap-2 mb-6"><span class="tech-tag">Crypto</span><span class="tech-tag">RSA-2048</span><span class="tech-tag">Integrity</span></div>
                     <a href="https://github.com/Srimanthl2k6" target="_blank" class="text-xs font-bold underline hover:text-white transition-colors">DECRYPT_FILES >></a>
                 </div>
                 <div class="project-vertical-card group">
                     <span class="text-[10px] opacity-40 mb-2 block tracking-widest">SIMULATION // 2025.07</span>
-                    <h4 class="text-2xl font-bold text-white mb-4">Enterprise Network Simulation</h4>
+                    <h4 class="text-xl md:text-2xl font-bold text-white mb-4">Enterprise Network Simulation</h4>
                     <p class="text-sm opacity-80 leading-relaxed mb-6">Designed a three-floor enterprise network using Cisco Packet Tracer with OSPF routing and HSRP redundancy. Configured Cisco ASA firewall zone policies for layered defense.</p>
                     <div class="flex flex-wrap gap-2 mb-6"><span class="tech-tag">Cisco ASA</span><span class="tech-tag">OSPF</span><span class="tech-tag">VLAN</span></div>
                     <a href="https://github.com/Srimanthl2k6" target="_blank" class="text-xs font-bold underline hover:text-white transition-colors">VIEW_SCHEMATIC >></a>
@@ -322,21 +342,21 @@
         <!-- Hardware Manifest -->
         <section id="skills" class="parallax-section">
             <span class="section-header">Sub-System: System_Specs</span>
-            <h3 class="text-4xl font-bold mb-16 uppercase italic">Hardware_Manifest</h3>
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-                <div class="glass-panel p-8 rounded-sm">
+            <h3 class="text-3xl md:text-4xl font-bold mb-12 md:mb-16 uppercase italic">Hardware_Manifest</h3>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
+                <div class="glass-panel p-6 md:p-8 rounded-sm">
                     <h5 class="text-xs font-bold mb-6 border-b border-[#00ff41] pb-2 uppercase opacity-50">Defensive_Ops</h5>
                     <ul class="text-xs space-y-4 font-bold"><li>[x] SIEM (WAZUH)</li><li>[x] THREAT DETECTION</li><li>[x] LOG ANALYSIS</li><li>[x] MITRE ATT&CK</li></ul>
                 </div>
-                <div class="glass-panel p-8 rounded-sm">
+                <div class="glass-panel p-6 md:p-8 rounded-sm">
                     <h5 class="text-xs font-bold mb-6 border-b border-[#00ff41] pb-2 uppercase opacity-50">Infrastructure</h5>
                     <ul class="text-xs space-y-4 font-bold"><li>[x] CISCO ASA</li><li>[x] OSPF/HSRP</li><li>[x] VLAN/ACL</li><li>[x] AD CONFIG</li></ul>
                 </div>
-                <div class="glass-panel p-8 rounded-sm">
+                <div class="glass-panel p-6 md:p-8 rounded-sm">
                     <h5 class="text-xs font-bold mb-6 border-b border-[#00ff41] pb-2 uppercase opacity-50">Technical_Logic</h5>
                     <ul class="text-xs space-y-4 font-bold"><li>[x] PYTHON CORE</li><li>[x] C / C++</li><li>[x] LINUX BASH</li><li>[x] KALI SUITE</li></ul>
                 </div>
-                <div class="glass-panel p-8 rounded-sm clickable-panel" onclick="openModal()">
+                <div class="glass-panel p-6 md:p-8 rounded-sm clickable-panel shadow-[0_0_20px_rgba(0,255,65,0.1)] hover:shadow-[0_0_30px_rgba(0,255,65,0.3)] transition-all" onclick="openModal()">
                     <h5 class="text-xs font-bold mb-6 border-b border-[#00ff41] pb-2 uppercase opacity-50">Accreditation</h5>
                     <ul class="text-xs space-y-4 font-bold">
                         <li class="text-[#00ff41]">[x] ISC2 CERTIFIED (CC)</li>
@@ -351,31 +371,32 @@
         <!-- Active Operations -->
         <section id="operations" class="parallax-section">
             <span class="section-header">Sub-System: Logistics_Data</span>
-            <h3 class="text-4xl font-bold mb-16 uppercase italic">Active_Operations</h3>
+            <h3 class="text-3xl md:text-4xl font-bold mb-12 md:mb-16 uppercase italic">Active_Operations</h3>
             <div class="max-w-4xl glass-panel p-6 md:p-10 rounded-sm">
-                <div class="op-one-liner"><span class="text-sm font-bold">ISC2 Member</span><span class="text-[10px] opacity-90 uppercase text-white font-bold tracking-widest">Certified in Cybersecurity</span></div>
-                <div class="op-one-liner"><span class="text-sm font-bold">Head of Cybersecurity - Enigma</span><span class="text-[10px] opacity-90 uppercase text-white font-bold tracking-widest">University Tech Club</span></div>
-                <div class="op-one-liner"><span class="text-sm font-bold">Director - Mastertalkies</span><span class="text-[10px] opacity-90 uppercase text-white font-bold tracking-widest">Indie Film Production</span></div>
-                <div class="op-one-liner"><span class="text-sm font-bold">Author & Poet - Writers Pouch</span><span class="text-[10px] opacity-90 uppercase text-white font-bold tracking-widest">Indie Writers Association</span></div>
+                <div class="op-one-liner"><span class="text-sm font-bold">ISC2 Member</span><span class="text-[10px] opacity-90 uppercase text-white font-bold tracking-widest mt-1 md:mt-0">Certified in Cybersecurity</span></div>
+                <div class="op-one-liner"><span class="text-sm font-bold">Head of Cybersecurity - Enigma</span><span class="text-[10px] opacity-90 uppercase text-white font-bold tracking-widest mt-1 md:mt-0">University Tech Club</span></div>
+                <div class="op-one-liner"><span class="text-sm font-bold">Director - Mastertalkies</span><span class="text-[10px] opacity-90 uppercase text-white font-bold tracking-widest mt-1 md:mt-0">Indie Film Production</span></div>
+                <div class="op-one-liner"><span class="text-sm font-bold">Author & Poet - Writers Pouch</span><span class="text-[10px] opacity-90 uppercase text-white font-bold tracking-widest mt-1 md:mt-0">Indie Writers Association</span></div>
             </div>
         </section>
 
         <!-- Final Handshake -->
         <section id="uplink" class="parallax-section">
             <span class="section-header">Sub-System: Terminal_Output</span>
-            <h3 class="text-4xl font-bold mb-16 uppercase italic">Final_Handshake</h3>
-            <div class="max-w-4xl glass-panel p-10 rounded-sm">
-                <p class="text-lg md:text-xl leading-relaxed mb-10">ISC2 Member & SOC Analyst / CS Undergraduate. Building secure architectures through <span class="text-white">SIEM operations</span>, <span class="text-white">threat detection</span>, and <span class="text-white">incident response</span>.</p>
-                <div class="flex gap-8 items-center">
-                    <a href="https://github.com/Srimanthl2k6" target="_blank" class="social-link-icon p-4 border border-[#00ff41] transition-all"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.403 5.403 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4"></path><path d="M9 18c-4.51 2-5-2-7-2"></path></svg></a>
-                    <a href="https://www.linkedin.com/in/srimanth-lashkar-0794a5264/" target="_blank" class="social-link-icon p-4 border border-[#00ff41] transition-all"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"></path><rect width="4" height="12" x="2" y="9"></rect><circle cx="4" cy="4" r="2"></circle></svg></a>
-                    <a href="https://www.instagram.com/srimanth__l/" target="_blank" class="social-link-icon p-4 border border-[#00ff41] transition-all"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="20" x="2" y="2" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" x2="17.51" y1="6.5" y2="6.5"></line></svg></a>
+            <h3 class="text-3xl md:text-4xl font-bold mb-12 md:mb-16 uppercase italic">Final_Handshake</h3>
+            <div class="max-w-4xl glass-panel p-6 md:p-10 rounded-sm">
+                <p class="text-base md:text-xl leading-relaxed mb-10">ISC2 Member & SOC Analyst / CS Undergraduate. Building secure architectures through <span class="text-white">SIEM operations</span>, <span class="text-white">threat detection</span>, and <span class="text-white">incident response</span>.</p>
+                <div class="flex gap-6 md:gap-8 items-center">
+                    <a href="https://github.com/Srimanthl2k6" target="_blank" class="social-link-icon p-3 md:p-4 border border-[#00ff41] transition-all"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.403 5.403 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4"></path><path d="M9 18c-4.51 2-5-2-7-2"></path></svg></a>
+                    <a href="https://www.linkedin.com/in/srimanth-lashkar-0794a5264/" target="_blank" class="social-link-icon p-3 md:p-4 border border-[#00ff41] transition-all"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"></path><rect width="4" height="12" x="2" y="9"></rect><circle cx="4" cy="4" r="2"></circle></svg></a>
+                    <a href="https://www.instagram.com/srimanth__l/" target="_blank" class="social-link-icon p-3 md:p-4 border border-[#00ff41] transition-all"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="20" x="2" y="2" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" x2="17.51" y1="6.5" y2="6.5"></line></svg></a>
                 </div>
             </div>
         </section>
 
-        <footer class="p-16 border-t border-[#00ff41]/10 bg-black">
-            <div class="max-w-4xl mx-auto flex flex-col md:flex-row justify-between items-center gap-8 opacity-40 text-[10px] tracking-widest text-center md:text-left">
+        <!-- Redesigned responsive footer padding -->
+        <footer class="p-8 md:p-16 border-t border-[#00ff41]/10 bg-black">
+            <div class="max-w-4xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4 opacity-40 text-[10px] tracking-widest text-center md:text-left">
                 <div class="flex gap-6"><span>IP: <span id="user-ip">...</span></span><span id="clock">TIME: 00:00:00</span></div>
                 <div>© 2026 SRIMANTH LASHKAR // ISC2_MEMBER_3448949</div>
             </div>
@@ -399,7 +420,7 @@
         class Planet {
             constructor(x, targetScrollPercent, radius, color, parallax) { 
                 this.x = x; 
-                this.targetScrollPercent = targetScrollPercent;
+                this.targetScrollPercent = targetScrollPercent; 
                 this.radius = radius; 
                 this.color = color; 
                 this.parallax = parallax; 
@@ -492,7 +513,7 @@
             }
         });
         
-        // Sync horizontal scrolling on mobile
+        // Sync horizontal scrolling on mobile allowing padding gap to display ghost text
         terminalInput.addEventListener("scroll", () => {
             ghostCommand.style.transform = `translate(${-terminalInput.scrollLeft}px, -50%)`;
         });
@@ -500,7 +521,8 @@
         ghostCommand.innerHTML = commandTemplate;
 
         async function startInstallation() {
-            localStorage.setItem('srimanth_os_v20', Date.now()); document.getElementById('input-line').classList.add('hidden');
+            // New cache key effectively tests it fresh
+            localStorage.setItem('srimanth_os_v21', Date.now()); document.getElementById('input-line').classList.add('hidden');
             for (const log of logs) {
                 let p = document.createElement('p'); p.innerHTML = `<span class="opacity-30 mr-2">[SYS]</span> ${log.text}`;
                 terminalLog.appendChild(p); await new Promise(r => setTimeout(r, log.delay));
@@ -525,8 +547,7 @@
         });
 
         window.addEventListener('load', () => { 
-            // Changed cache key to v20 to force reset for this test
-            let saved = localStorage.getItem('srimanth_os_v20');
+            let saved = localStorage.getItem('srimanth_os_v21');
             if (saved && Date.now() - parseInt(saved) < 600000) { 
                 terminalGate.style.display = 'none'; mainPortfolio.style.display = 'block'; mainPortfolio.classList.add('visible'); canvas.style.opacity = '1'; initSpace(); animate(); 
             } else terminalInput.focus();
