@@ -39,6 +39,12 @@
             height: 100vh;
             z-index: 0; /* Base layer, above body background */
             pointer-events: none;
+            opacity: 0;
+            transition: opacity 2s ease-in-out; /* Synchronized with main-portfolio */
+        }
+
+        #spaceCanvas.visible {
+            opacity: 1;
         }
 
         .crt-overlay {
@@ -262,10 +268,11 @@
             </div>
             <div class="terminal-body">
                 <div id="terminal-log" class="font-mono text-xs">
-                    <p class="text-white/40 mb-1">Srimanth-OS [Responsive-Kernel-v22]</p>
+                    <p class="text-white/40 mb-1">Srimanth-OS [Responsive-Kernel-v23]</p>
                     <p class="mb-4">Kernel initialized. Awaiting uplink command...</p>
                 </div>
                 <div id="input-line" class="terminal-input-container">
+                    <!-- Responsive prompt string -->
                     <span class="text-[#00ff41] font-bold hidden sm:inline">visitor@srimanth:~$</span>
                     <span class="text-[#00ff41] font-bold sm:hidden">visitor:~$</span>
                     
@@ -299,6 +306,7 @@
         <section id="hero" class="parallax-section">
             <div class="max-w-4xl">
                 <span class="section-header">Location: Hyderabad_Grid</span>
+                <!-- Scaling adjusted to absolutely guarantee fitting on small mobile -->
                 <h2 class="text-4xl sm:text-5xl md:text-9xl font-bold mb-4 glitch uppercase leading-tight">Srimanth<br>Lashkar</h2>
                 <div class="mt-4">
                     <p class="text-[7px] md:text-[8px] opacity-70 tracking-[0.6em] sm:tracking-[0.8em] md:tracking-[1em] font-bold uppercase text-[#00ff41] break-words">
@@ -519,15 +527,21 @@
 
         async function startInstallation() {
             // New cache key effectively tests it fresh
-            localStorage.setItem('srimanth_os_v22', Date.now()); document.getElementById('input-line').classList.add('hidden');
+            localStorage.setItem('srimanth_os_v23', Date.now()); document.getElementById('input-line').classList.add('hidden');
             for (const log of logs) {
                 let p = document.createElement('p'); p.innerHTML = `<span class="opacity-30 mr-2">[SYS]</span> ${log.text}`;
                 terminalLog.appendChild(p); await new Promise(r => setTimeout(r, log.delay));
             }
             terminalGate.style.filter = 'blur(40px)'; terminalGate.style.opacity = '0';
             setTimeout(() => {
-                terminalGate.style.display = 'none'; mainPortfolio.style.display = 'block';
-                requestAnimationFrame(() => { mainPortfolio.classList.add('visible'); initSpace(); animate(); });
+                terminalGate.style.display = 'none'; 
+                mainPortfolio.style.display = 'block';
+                initSpace(); // Initialize the engine before fading in
+                requestAnimationFrame(() => { 
+                    mainPortfolio.classList.add('visible'); 
+                    canvas.classList.add('visible'); 
+                    animate(); 
+                });
             }, 1200);
         }
 
@@ -544,9 +558,14 @@
         });
 
         window.addEventListener('load', () => { 
-            let saved = localStorage.getItem('srimanth_os_v22');
+            let saved = localStorage.getItem('srimanth_os_v23');
             if (saved && Date.now() - parseInt(saved) < 600000) { 
-                terminalGate.style.display = 'none'; mainPortfolio.style.display = 'block'; mainPortfolio.classList.add('visible'); initSpace(); animate(); 
+                terminalGate.style.display = 'none'; 
+                mainPortfolio.style.display = 'block'; 
+                mainPortfolio.classList.add('visible'); 
+                canvas.classList.add('visible'); 
+                initSpace(); 
+                animate(); 
             } else terminalInput.focus();
         });
 
